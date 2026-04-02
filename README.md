@@ -40,7 +40,7 @@ pip install -r requirements.txt
 #### 5. Execute o dashboard
 
 ```bash
-streamlit run app.py
+streamlit run Início.py
 ```
 
 A aplicação será aberta automaticamente em `http://localhost:8501`
