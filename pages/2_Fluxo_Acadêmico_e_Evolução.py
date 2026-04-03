@@ -94,30 +94,6 @@ with col2:
         )
         st.plotly_chart(fig2, use_container_width=True)
 
-# st.write("### Tabela de fluxo por região")
-# st.dataframe(df_regiao)
-
-
-st.subheader("Relação entre Ingressantes e Concluintes em 2024")
-with st.spinner("Carregando relação ingressantes vs concluintes..."):
-    query2 = """
-    SELECT NU_ANO_CENSO, SUM(QT_ING) as total_ingressantes, SUM(QT_CONC) as total_concluintes
-    FROM read_csv('data.csv', delim=';', encoding='latin-1')
-    GROUP BY NU_ANO_CENSO
-    ORDER BY NU_ANO_CENSO
-    """
-    df2 = con.execute(query2).df()
-    fig2 = go.Figure()
-    fig2.add_trace(
-        go.Bar(x=df2["NU_ANO_CENSO"], y=df2["total_ingressantes"], name="Ingressantes")
-    )
-    fig2.add_trace(
-        go.Bar(x=df2["NU_ANO_CENSO"], y=df2["total_concluintes"], name="Concluintes")
-    )
-    fig2.update_layout(barmode="group", title="Ingressantes vs Concluintes por Ano")
-    st.plotly_chart(fig2)
-
-
 st.subheader("Distribuição das Taxas de Conclusão por Curso")
 query3_all = """
 SELECT NO_CURSO,
@@ -154,8 +130,9 @@ st.write(f"- Mínimo: {df3_all['taxa_conclusao'].min():.2f}%")
 st.write(f"- Máximo: {df3_all['taxa_conclusao'].max():.2f}%")
 st.write(f"- Cursos com 0%: {(df3_all['taxa_conclusao'] == 0).sum()}")
 st.write(f"- Cursos com 100%: {(df3_all['taxa_conclusao'] == 100).sum()}")
-# Normalização e análise adicional
-st.subheader("Gráfico 4: Taxa de Conclusão vs Total de Matriculados (por curso)")
+
+
+st.subheader("Taxa de Conclusão vs Total de Matriculados (por curso)")
 with st.spinner("Carregando scatter plot..."):
     fig4 = px.scatter(
         df3_all,
