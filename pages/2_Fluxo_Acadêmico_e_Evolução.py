@@ -5,87 +5,94 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 st.set_page_config(page_title="Fluxo Acadêmico e Evolução")
+st.markdown(
+    """
+    <style>
+        .st-emotion-cache-1w723zb {
+            max-width: 1200px !important;
+        }
+    </style>
+""",
+    unsafe_allow_html=True,
+)
 
 st.title("Fluxo Acadêmico e Evolução")
 
 
 con = duckdb.connect()
 
+col1, col2 = st.columns(2)
 
-st.subheader("Funil de Fluxo Acadêmico (2024)")
-with st.spinner("Carregando funil de fluxo..."):
-    query_funil = """
-    SELECT
-        SUM(QT_ING) AS ingressantes,
-        SUM(QT_MAT) AS matriculados,
-        SUM(QT_CONC) AS concluintes
-    FROM read_csv('data.csv', delim=';', encoding='latin-1')
-    WHERE NU_ANO_CENSO = 2024
-    """
-    df_funil = con.execute(query_funil).df().iloc[0]
+with col1:
+    st.subheader("Funil de Fluxo Acadêmico (2024)")
+    with st.spinner("Carregando funil de fluxo..."):
+        query_funil = """
+        SELECT
+            SUM(QT_ING) AS ingressantes,
+            SUM(QT_MAT) AS matriculados,
+            SUM(QT_CONC) AS concluintes
+        FROM read_csv('data.csv', delim=';', encoding='latin-1')
+        WHERE NU_ANO_CENSO = 2024
+        """
+        df_funil = con.execute(query_funil).df().iloc[0]
 
-    fig_funil = go.Figure(
-        go.Funnel(
-            y=["Ingressantes", "Matriculados", "Concluintes"],
-            x=[
-                df_funil["ingressantes"],
-                df_funil["matriculados"],
-                df_funil["concluintes"],
-            ],
-            textinfo="value+percent initial",
+        fig_funil = go.Figure(
+            data=[
+                go.Funnel(
+                    y=["Ingressantes", "Matriculados", "Concluintes"],
+                    x=[
+                        df_funil["ingressantes"],
+                        df_funil["matriculados"],
+                        df_funil["concluintes"],
+                    ],
+                    textinfo="value+percent initial",
+                )
+            ]
         )
-    )
-    st.plotly_chart(fig_funil)
+        st.plotly_chart(fig_funil, use_container_width=True)
 
-# st.write("### Dados usados no funil")
-# st.dataframe(
-#     pd.DataFrame(
-#         {
-#             "Etapa": ["Ingressantes", "Matriculados", "Concluintes"],
-#             "Contagem": [
-#                 df_funil["ingressantes"],
-#                 df_funil["matriculados"],
-#                 df_funil["concluintes"],
-#             ],
-#         }
-#     )
-# )
+with col2:
+    st.subheader("Fluxo por Região (2024)")
+    with st.spinner("Carregando fluxo por região..."):
+        query_regiao = """
+        SELECT NO_REGIAO,
+               SUM(QT_ING) AS ingressantes,
+               SUM(QT_MAT) AS matriculados,
+               SUM(QT_CONC) AS concluintes
+        FROM read_csv('data.csv', delim=';', encoding='latin-1')
+        WHERE NU_ANO_CENSO = 2024
+        GROUP BY NO_REGIAO
+        ORDER BY NO_REGIAO
+        """
+        df_regiao = con.execute(query_regiao).df()
 
-st.subheader("Fluxo por Região (2024)")
-with st.spinner("Carregando fluxo por região..."):
-    query_regiao = """
-    SELECT NO_REGIAO,
-           SUM(QT_ING) AS ingressantes,
-           SUM(QT_MAT) AS matriculados,
-           SUM(QT_CONC) AS concluintes
-    FROM read_csv('data.csv', delim=';', encoding='latin-1')
-    WHERE NU_ANO_CENSO = 2024
-    GROUP BY NO_REGIAO
-    ORDER BY NO_REGIAO
-    """
-    df_regiao = con.execute(query_regiao).df()
-
-    fig2 = go.Figure()
-    fig2.add_trace(
-        go.Bar(
-            x=df_regiao["NO_REGIAO"], y=df_regiao["ingressantes"], name="Ingressantes"
+        fig2 = go.Figure()
+        fig2.add_trace(
+            go.Bar(
+                x=df_regiao["NO_REGIAO"],
+                y=df_regiao["ingressantes"],
+                name="Ingressantes",
+            )
         )
-    )
-    fig2.add_trace(
-        go.Bar(
-            x=df_regiao["NO_REGIAO"], y=df_regiao["matriculados"], name="Matriculados"
+        fig2.add_trace(
+            go.Bar(
+                x=df_regiao["NO_REGIAO"],
+                y=df_regiao["matriculados"],
+                name="Matriculados",
+            )
         )
-    )
-    fig2.add_trace(
-        go.Bar(x=df_regiao["NO_REGIAO"], y=df_regiao["concluintes"], name="Concluintes")
-    )
-    fig2.update_layout(
-        barmode="group",
-        title="Fluxo Acadêmico por Região (2024)",
-        xaxis_title="Região",
-        yaxis_title="Quantidade",
-    )
-    st.plotly_chart(fig2)
+        fig2.add_trace(
+            go.Bar(
+                x=df_regiao["NO_REGIAO"], y=df_regiao["concluintes"], name="Concluintes"
+            )
+        )
+        fig2.update_layout(
+            barmode="group",
+            title="Fluxo Acadêmico por Região (2024)",
+            xaxis_title="Região",
+            yaxis_title="Quantidade",
+        )
+        st.plotly_chart(fig2, use_container_width=True)
 
 # st.write("### Tabela de fluxo por região")
 # st.dataframe(df_regiao)
@@ -182,11 +189,21 @@ filtered = df3_all[df3_all["total_matriculados"] >= min_matriculados]
 df3_low = df3_all.sort_values("taxa_conclusao", ascending=True).head(10)
 df3_high = df3_all.sort_values("taxa_conclusao", ascending=False).head(10)
 
-st.subheader("Top 10 Cursos com Menor Taxa de Conclusão")
-st.dataframe(df3_low[["NO_CURSO", "total_matriculados", "taxa_conclusao"]])
+col3, col4 = st.columns(2)
 
-st.subheader("Top 10 Cursos com Maior Taxa de Conclusão")
-st.dataframe(df3_high[["NO_CURSO", "total_matriculados", "taxa_conclusao"]])
+with col3:
+    st.subheader("Top 10 Cursos com Menor Taxa de Conclusão")
+    st.dataframe(
+        df3_low[["NO_CURSO", "total_matriculados", "taxa_conclusao"]],
+        use_container_width=True,
+    )
+
+with col4:
+    st.subheader("Top 10 Cursos com Maior Taxa de Conclusão")
+    st.dataframe(
+        df3_high[["NO_CURSO", "total_matriculados", "taxa_conclusao"]],
+        use_container_width=True,
+    )
 
 
 con.close()
