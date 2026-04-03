@@ -12,7 +12,7 @@ st.title("Fluxo Acadêmico e Evolução")
 con = duckdb.connect()
 
 
-st.subheader("Gráfico 1: Funil de Fluxo Acadêmico (2024)")
+st.subheader("Funil de Fluxo Acadêmico (2024)")
 query_funil = """
 SELECT
     SUM(QT_ING) AS ingressantes,
@@ -46,7 +46,7 @@ st.plotly_chart(fig_funil)
 #     )
 # )
 
-st.subheader("Gráfico 2: Fluxo por Região (2024)")
+st.subheader("Fluxo por Região (2024)")
 query_regiao = """
 SELECT NO_REGIAO,
        SUM(QT_ING) AS ingressantes,
@@ -81,7 +81,7 @@ st.plotly_chart(fig2)
 # st.dataframe(df_regiao)
 
 
-st.subheader("Gráfico 3: Relação entre Ingressantes e Concluintes em 2024")
+st.subheader("Relação entre Ingressantes e Concluintes em 2024")
 query2 = """
 SELECT NU_ANO_CENSO, SUM(QT_ING) as total_ingressantes, SUM(QT_CONC) as total_concluintes
 FROM read_csv('data.csv', delim=';', encoding='latin-1')
@@ -100,7 +100,7 @@ fig2.update_layout(barmode="group", title="Ingressantes vs Concluintes por Ano")
 st.plotly_chart(fig2)
 
 
-st.subheader("Gráfico 3: Cursos com Menor e Maior Taxa de Conclusão")
+st.subheader("Distribuição das Taxas de Conclusão por Curso")
 query3_all = """
 SELECT NO_CURSO,
        SUM(QT_CONC) AS total_concluintes,
@@ -113,30 +113,29 @@ HAVING SUM(QT_MAT) > 0
 df3_all = con.execute(query3_all).df()
 
 
-# Cursos com menor taxa (risco maior de evasão)
-df3_low = df3_all.sort_values("taxa_conclusao", ascending=True).head(10)
-fig3_low = px.bar(
-    df3_low,
-    x="NO_CURSO",
-    y="taxa_conclusao",
-    title="Top 10 Cursos com Menor Taxa de Conclusão (Maior Evasão)",
-    labels={"taxa_conclusao": "Taxa de Conclusão (%)"},
+fig_dist = px.histogram(
+    df3_all,
+    x="taxa_conclusao",
+    nbins=20,
+    title="Distribuição das Taxas de Conclusão (todos os cursos)",
+    labels={"taxa_conclusao": "Taxa de Conclusão (%)", "count": "Número de Cursos"},
+    color_discrete_sequence=["lightblue"],
 )
-fig3_low.update_xaxes(tickangle=45)
-st.plotly_chart(fig3_low)
-
-# Cursos com maior taxa (mais eficientes)
-df3_high = df3_all.sort_values("taxa_conclusao", ascending=False).head(10)
-fig3_high = px.bar(
-    df3_high,
-    x="NO_CURSO",
-    y="taxa_conclusao",
-    title="Top 10 Cursos com Maior Taxa de Conclusão",
-    labels={"taxa_conclusao": "Taxa de Conclusão (%)"},
+fig_dist.update_layout(
+    xaxis_title="Taxa de Conclusão (%)",
+    yaxis_title="Número de Cursos",
+    bargap=0.1,
 )
-fig3_high.update_xaxes(tickangle=45)
-st.plotly_chart(fig3_high)
+st.plotly_chart(fig_dist)
 
+# Adicionar estatísticas
+st.write("### Estatísticas das Taxas de Conclusão")
+st.write(f"- Média: {df3_all['taxa_conclusao'].mean():.2f}%")
+st.write(f"- Mediana: {df3_all['taxa_conclusao'].median():.2f}%")
+st.write(f"- Mínimo: {df3_all['taxa_conclusao'].min():.2f}%")
+st.write(f"- Máximo: {df3_all['taxa_conclusao'].max():.2f}%")
+st.write(f"- Cursos com 0%: {(df3_all['taxa_conclusao'] == 0).sum()}")
+st.write(f"- Cursos com 100%: {(df3_all['taxa_conclusao'] == 100).sum()}")
 # Normalização e análise adicional
 st.subheader("Gráfico 4: Taxa de Conclusão vs Total de Matriculados (por curso)")
 fig4 = px.scatter(
@@ -165,32 +164,16 @@ st.plotly_chart(fig4)
 min_matriculados = 40
 filtered = df3_all[df3_all["total_matriculados"] >= min_matriculados]
 
-st.write(f"Cursos com >= {min_matriculados} matriculados: {len(filtered)}")
+# Manter os top 10, mas em formato de tabela ou scatter
+df3_low = df3_all.sort_values("taxa_conclusao", ascending=True).head(10)
+df3_high = df3_all.sort_values("taxa_conclusao", ascending=False).head(10)
 
-if len(filtered) > 0:
-    st.subheader("Top 10 piores taxas de conclusão (>=40 matriculados)")
-    df_low = filtered.sort_values("taxa_conclusao", ascending=True).head(10)
-    fig_low = px.bar(
-        df_low,
-        x="NO_CURSO",
-        y="taxa_conclusao",
-        title=f"Top 10 Cursos com Menor Taxa de Conclusão (>= {min_matriculados} matriculados)",
-        labels={"taxa_conclusao": "Taxa de Conclusão (%)"},
-    )
-    fig_low.update_xaxes(tickangle=45)
-    st.plotly_chart(fig_low)
+st.subheader("Top 10 Cursos com Menor Taxa de Conclusão")
+st.dataframe(df3_low[["NO_CURSO", "total_matriculados", "taxa_conclusao"]])
 
-    st.subheader("Top 10 melhores taxas de conclusão (>=40 matriculados)")
-    df_high = filtered.sort_values("taxa_conclusao", ascending=False).head(10)
-    fig_high = px.bar(
-        df_high,
-        x="NO_CURSO",
-        y="taxa_conclusao",
-        title=f"Top 10 Cursos com Maior Taxa de Conclusão (>= {min_matriculados} matriculados)",
-        labels={"taxa_conclusao": "Taxa de Conclusão (%)"},
-    )
-    fig_high.update_xaxes(tickangle=45)
-    st.plotly_chart(fig_high)
+st.subheader("Top 10 Cursos com Maior Taxa de Conclusão")
+st.dataframe(df3_high[["NO_CURSO", "total_matriculados", "taxa_conclusao"]])
+
 
 
 con.close()
