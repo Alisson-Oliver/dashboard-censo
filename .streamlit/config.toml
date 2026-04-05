@@ -3,12 +3,12 @@ primaryColor = "#FF4B4B"      # Cor principal (Botões, seleções)
 backgroundColor = "#0E1117"   # Fundo do App (Dark mode)
 secondaryBackgroundColor = "#262730" # Sidebar e Widgets
 textColor = "#FAFAFA"
-font = "sans seri"f
+font = "sans serif"
 
 [server]
 headless = true               # Importante para rodar em servidores Linux (Ubuntu/Arch)
 port = 8501                   # Porta padrão
-enableCORS = false            # Evita problemas de acesso externo em alguns ambientes
+enableCORS = true             # Permite CORS para compatibilidade com XSRF protection
 maxUploadSize = 200           # Aumenta limite de upload de CSVs (em MB)
 
 [browser]
