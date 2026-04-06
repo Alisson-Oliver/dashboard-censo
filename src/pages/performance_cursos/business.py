@@ -73,6 +73,42 @@ class PerformanceService:
         )
         
         return df_melted
+    ####################################################
+    #--Curso x Região x Taxa de conclusão-----------------
+    @staticmethod
+    def get_conclusao_hierarquia() -> pd.DataFrame:
+        db = get_db()
+        data_path = db.get_data_path()
+
+        query = f"""
+        SELECT 
+            NO_REGIAO AS Regiao,
+            NO_CURSO AS Curso,
+            SUM(QT_CONC) AS Total_Concluintes,
+            SUM(QT_ING) AS Total_Ingressantes,
+            CASE 
+                WHEN SUM(QT_ING) > 0 
+                THEN (CAST(SUM(QT_CONC) AS FLOAT) / SUM(QT_ING)) * 100 
+                ELSE 0 
+            END AS Taxa_Conclusao
+        FROM read_csv('{data_path}', delim=';', encoding='latin-1')
+        WHERE NO_REGIAO IS NOT NULL AND NO_CURSO IS NOT NULL
+        GROUP BY NO_REGIAO, NO_CURSO
+        HAVING Total_Ingressantes > 50 
+        ORDER BY Regiao, Taxa_Conclusao DESC
+        """
+        
+        df = db.execute_query(query).df()
+        
+        # Filtro para remover valor vazio
+        df = df.dropna(subset=['Regiao', 'Curso'])
+        df = df[(df['Regiao'] != '') & (df['Curso'] != '')]
+        
+        df['Taxa_Conclusao'] = df['Taxa_Conclusao'].clip(upper=100)
+        
+        return df
+   
+
 
 
 

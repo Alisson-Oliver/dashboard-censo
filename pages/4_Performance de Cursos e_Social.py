@@ -15,7 +15,8 @@ def main():
         from src.pages.performance_cursos.business import PerformanceService
         from src.pages.performance_cursos.components import render_top_10_cursos
         from src.pages.performance_cursos.components import render_financiamento_comparativo
-        from src.pages.performance_cursos.components import render_ingresso_comparativo 
+        from src.pages.performance_cursos.components import render_ingresso_comparativo
+        from src.pages.performance_cursos.components import render_taxa_conclusao 
     except ModuleNotFoundError as e:
         st.error(f"Erro ao localizar os módulos do projeto: {e}")
         st.info(f"Caminho tentado: {root_dir}")
@@ -48,6 +49,14 @@ def main():
             df_ing = PerformanceService.get_ingresso_comparativo()
             fig_ing = render_ingresso_comparativo(df_ing)
             st.plotly_chart(fig_ing, use_container_width=True)
+        ###########################################################
+        #-------Taxa de conclusão por Região e Curso----------------
+            st.divider()
+            st.subheader("Taxa de Conclusão por Região e Curso")
+            with st.spinner("Gerando Treemap hierárquico..."):
+                df_tree = PerformanceService.get_conclusao_hierarquia()
+                fig_tree = render_taxa_conclusao(df_tree)
+                st.plotly_chart(fig_tree, use_container_width=True)  
 
            
     

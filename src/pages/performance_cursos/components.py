@@ -80,3 +80,28 @@ def render_ingresso_comparativo(df: pd.DataFrame):
     )
     
     return fig
+############################################
+#--------Taxa de conclusão por região-------------
+def render_taxa_conclusao(df: pd.DataFrame):
+    fig = px.treemap(
+        df,
+        path=[px.Constant("Brasil"), 'Regiao', 'Curso'], 
+        values='Taxa_Conclusao',
+        color='Taxa_Conclusao', 
+        color_continuous_scale='Blues', 
+        title='Relacionamento: Região x Curso (Tamanho por Taxa de Conclusão)',
+        labels={'Taxa_Conclusao': 'Taxa de Conclusão (%)'}
+    )
+    
+    fig.update_traces(
+        textinfo="label+value", 
+        texttemplate='%{label}<br>%{value:.2f}%',
+        hovertemplate='<b>%{label}</b><br>Região: %{parent}<br>Taxa: %{value:.2f}%'
+    )
+    
+    fig.update_layout(
+        height=650, 
+        margin=dict(t=50, l=10, r=10, b=10)
+    )
+    
+    return fig 
