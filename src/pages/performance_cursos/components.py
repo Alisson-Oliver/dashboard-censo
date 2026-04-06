@@ -26,3 +26,31 @@ def render_top_10_cursos(df: pd.DataFrame):
     fig.update_layout(height=400)
     
     return fig
+#############################################################
+##--PROGRAMAS DE FINANCIAMENTO---##################
+def render_financiamento_comparativo(df: pd.DataFrame):
+    """Renderiza gráfico de barras comparativo de financiamentos (FIES vs PROUNI)"""
+    
+    #Gráfico vertical 
+    fig = px.bar(
+        df,
+        x='Programa',
+        y='Total_Matriculas',
+        title='Distribuição de Matrículas por Programa de Financiamento',
+        labels={
+            'Programa': 'Programa Social',
+            'Total_Matriculas': 'Total de Alunos'
+        },
+        color='Total_Matriculas',
+        color_continuous_scale='Blues',
+        text_auto='.2s' # Mantendo sua formatação limpa (ex: 500k)
+    )
+    
+    fig.update_layout(
+        height=400,
+        xaxis_title="Programas Sociais",
+        yaxis_title="Total de Matrículas",
+        showlegend=False
+    )
+    
+    return fig
