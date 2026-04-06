@@ -30,7 +30,7 @@ class PerformanceService:
         db = get_db()
         data_path = db.get_data_path()
 
-        #Somamos as colunas específicas de financiamento
+        #Somamos as colunas 
         query = f"""
         SELECT 
             SUM(QT_MAT_FIES) AS FIES,
@@ -47,6 +47,33 @@ class PerformanceService:
         
         return df_melted
     #################################################################################
+    #----------------FORMA DE INGRESSO -------------
+    @staticmethod
+    def get_ingresso_comparativo() -> pd.DataFrame:
+        """Regra de Negócio: Comparativo de ingressantes via ENEM vs VESTIBULAR"""
+        db = get_db()
+        data_path = db.get_data_path()
+
+        #Somar as colunas de ingresso
+        query = f"""
+        SELECT 
+            SUM(QT_ING_ENEM) AS ENEM,
+            SUM(QT_ING_VESTIBULAR) AS VESTIBULAR
+        FROM read_csv('{data_path}', delim=';', encoding='latin-1')
+        """
+        
+        #DataFrame
+        df_result = db.execute_query(query).df()
+        
+        #O resultado vem como uma linha com duas colunas 
+        #Melt para transformar em um formato longo 
+        df_melted = df_result.melt(
+            var_name='Forma_Ingresso', 
+            value_name='Total_Ingressantes'
+        )
+        
+        return df_melted
+
 
 
     

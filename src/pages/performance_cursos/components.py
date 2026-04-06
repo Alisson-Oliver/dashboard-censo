@@ -5,13 +5,11 @@ import pandas as pd
 
 def render_top_10_cursos(df: pd.DataFrame):
     """Renderiza gráfico de barras do Top 10 Cursos"""
-    
-    # Montagem do gráfico seguindo o padrão da equipe
     fig = px.bar(
         df,
         x='total_matriculados',
         y='NO_CURSO',
-        orientation='h', # Horizontal para caber nomes como "Engenharia de Computação"
+        orientation='h',
         title='Top 10 Cursos com Maiores Matrículas',
         labels={
             'NO_CURSO': 'Curso',
@@ -19,10 +17,10 @@ def render_top_10_cursos(df: pd.DataFrame):
         },
         color='total_matriculados',
         color_continuous_scale='Blues',
-        text_auto='.2s' # Mantive esse "tempero" para os números ficarem limpos (ex: 1.5M)
+        text_auto='.2s' 
     )
     
-    # Mantendo a altura padrão do resto do projeto
+    #Altura padrão
     fig.update_layout(height=400)
     
     return fig
@@ -43,7 +41,7 @@ def render_financiamento_comparativo(df: pd.DataFrame):
         },
         color='Total_Matriculas',
         color_continuous_scale='Blues',
-        text_auto='.2s' # Mantendo sua formatação limpa (ex: 500k)
+        text_auto='.2s' 
     )
     
     fig.update_layout(
@@ -51,6 +49,34 @@ def render_financiamento_comparativo(df: pd.DataFrame):
         xaxis_title="Programas Sociais",
         yaxis_title="Total de Matrículas",
         showlegend=False
+    )
+    
+    return fig
+#----Forma de Igresso------
+
+def render_ingresso_comparativo(df: pd.DataFrame):
+    """Renderiza gráfico de pizza com números totais sempre visíveis"""
+    
+    fig = px.pie(
+        df, 
+        values='Total_Ingressantes', 
+        names='Forma_Ingresso', 
+        title='Proporção de Ingresso: ENEM vs VESTIBULAR',
+        color_discrete_sequence=px.colors.sequential.Blues_r,
+        labels={'Forma_Ingresso': 'Tipo', 'Total_Ingressantes': 'Total'}
+    )
+    
+    fig.update_traces(
+        textinfo='label+value', 
+        texttemplate='%{label}: %{value:.2s}', 
+        textposition='outside',
+        marker=dict(line=dict(color='#FFFFFF', width=2))
+    )
+    
+    fig.update_layout(
+        height=450, 
+        showlegend=False, 
+        margin=dict(t=50, b=50, l=50, r=50)
     )
     
     return fig
