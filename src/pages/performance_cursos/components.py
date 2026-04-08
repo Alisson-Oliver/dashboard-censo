@@ -17,19 +17,16 @@ def render_top_10_cursos(df: pd.DataFrame):
         },
         color='total_matriculados',
         color_continuous_scale='Blues',
-        text_auto='.2s' 
+        text_auto='.2s'
     )
     
-    #Altura padrão
     fig.update_layout(height=400)
     
     return fig
-#############################################################
-##--PROGRAMAS DE FINANCIAMENTO---##################
+
 def render_financiamento_comparativo(df: pd.DataFrame):
     """Renderiza gráfico de barras comparativo de financiamentos (FIES vs PROUNI)"""
     
-    #Gráfico vertical 
     fig = px.bar(
         df,
         x='Programa',
@@ -41,7 +38,7 @@ def render_financiamento_comparativo(df: pd.DataFrame):
         },
         color='Total_Matriculas',
         color_continuous_scale='Blues',
-        text_auto='.2s' 
+        text_auto='.2s'
     )
     
     fig.update_layout(
@@ -52,7 +49,6 @@ def render_financiamento_comparativo(df: pd.DataFrame):
     )
     
     return fig
-#----Forma de Igresso------
 
 def render_ingresso_comparativo(df: pd.DataFrame):
     """Renderiza gráfico de pizza com números totais sempre visíveis"""
@@ -67,40 +63,39 @@ def render_ingresso_comparativo(df: pd.DataFrame):
     )
     
     fig.update_traces(
-        textinfo='label+value', 
-        texttemplate='%{label}: %{value:.2s}', 
+        textinfo='label+value',
+        texttemplate='%{label}: %{value:.2s}',
         textposition='outside',
         marker=dict(line=dict(color='#FFFFFF', width=2))
     )
     
     fig.update_layout(
         height=450, 
-        showlegend=False, 
+        showlegend=False,
         margin=dict(t=50, b=50, l=50, r=50)
     )
     
     return fig
-############################################
-#--------Taxa de conclusão por região-------------
+
 def render_taxa_conclusao(df: pd.DataFrame):
     fig = px.treemap(
         df,
-        path=[px.Constant("Brasil"), 'Regiao', 'Curso'], 
+        path=[px.Constant("Brasil"), 'Regiao', 'Curso'],
         values='Taxa_Conclusao',
-        color='Taxa_Conclusao', 
-        color_continuous_scale='Blues', 
+        color='Taxa_Conclusao',
+        color_continuous_scale='Blues',
         title='Relacionamento: Região x Curso (Tamanho por Taxa de Conclusão)',
         labels={'Taxa_Conclusao': 'Taxa de Conclusão (%)'}
     )
     
     fig.update_traces(
-        textinfo="label+value", 
+        textinfo="label+value",
         texttemplate='%{label}<br>%{value:.2f}%',
         hovertemplate='<b>%{label}</b><br>Região: %{parent}<br>Taxa: %{value:.2f}%'
     )
     
     fig.update_layout(
-        height=650, 
+        height=650,
         margin=dict(t=50, l=10, r=10, b=10)
     )
     

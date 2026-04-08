@@ -50,7 +50,6 @@ class DatabaseConnection:
         self.conn.close()
 
 
-# Instância global de conexão
 _db = None
 
 

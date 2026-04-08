@@ -98,9 +98,24 @@ def main():
         fig_atividades = render_pie_chart(df_atividades, "Atividades Extracurriculares")
         st.plotly_chart(fig_atividades, use_container_width=True)
 
-    st.subheader("Mobilidade Acadêmica")
-    fig_mobilidade = render_pie_chart(df_mobilidade, "Mobilidade Acadêmica")
-    st.plotly_chart(fig_mobilidade, use_container_width=True)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 if __name__ == "__main__":

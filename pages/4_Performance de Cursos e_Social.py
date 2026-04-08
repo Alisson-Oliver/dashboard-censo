@@ -57,10 +57,10 @@ def main():
             fig_ing = render_ingresso_comparativo(df_ing)
             st.plotly_chart(fig_ing, use_container_width=True)
 
-        with col4:
-            st.subheader("Taxa de Conclusão por Região e Curso")
-            fig_tree = render_taxa_conclusao(df_tree)
-            st.plotly_chart(fig_tree, use_container_width=True)
+        # with col4:
+        #     st.subheader("Taxa de Conclusão por Região e Curso")
+        #     fig_tree = render_taxa_conclusao(df_tree)
+        #     st.plotly_chart(fig_tree, use_container_width=True)
 
     except Exception as e:
         st.error("Erro na execução do dashboard.")

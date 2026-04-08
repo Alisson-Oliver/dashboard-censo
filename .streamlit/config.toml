@@ -1,8 +1,9 @@
 [theme]
-primaryColor = "#FF4B4B"      # Cor principal (Botões, seleções)
-backgroundColor = "#0E1117"   # Fundo do App (Dark mode)
-secondaryBackgroundColor = "#262730" # Sidebar e Widgets
-textColor = "#FAFAFA"
+base = "light"
+primaryColor = "#0EA5E9"             # Cor principal (acoes e destaques)
+backgroundColor = "#F8FAFC"          # Fundo do app (tema claro)
+secondaryBackgroundColor = "#FFFFFF" # Sidebar e widgets
+textColor = "#0F172A"
 font = "sans serif"
 
 [server]

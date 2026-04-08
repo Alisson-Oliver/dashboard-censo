@@ -4,7 +4,7 @@ from src.database import get_db
 
 st.set_page_config(
     page_title="Censo Curso Superior 2024 | Dashboard",
-    page_icon="🎓",
+    page_icon="",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -215,39 +215,34 @@ for i, (label, value, sub) in enumerate(metric_cards):
             unsafe_allow_html=True,
         )
 
-# col1, col2, col3 = st.columns(3)
-# col1.metric("Áreas de análise", "4")
-# col2.metric("Navegação", "Menu lateral")
-# col3.metric("Base do projeto", "Streamlit")
-
 st.markdown('<div class="section-title">Acesso rápido</div>', unsafe_allow_html=True)
 
 pages = [
     {
         "title": "Visão Geral e Distribuição Geográfica",
         "description": "Veja o panorama do país e a distribuição das instituições por região.",
-        "icon": "🌎",
+        "icon": "",
         "path": "pages/1_Visão_Geral_e_Distribuição_Geográfica.py",
         "tag": "Mapa e panorama",
     },
     {
         "title": "Fluxo Acadêmico e Evolução",
         "description": "Analise trajetórias, movimentações e evolução dos estudantes ao longo do tempo.",
-        "icon": "📈",
+        "icon": "",
         "path": "pages/2_Fluxo_Acadêmico_e_Evolução.py",
         "tag": "Trajetória acadêmica",
     },
     {
         "title": "Perfil Socioeconômico do Estudante",
         "description": "Explore características sociais e econômicas do público atendido pelo ensino superior.",
-        "icon": "👥",
+        "icon": "",
         "path": "pages/3_Perfil_Socioeconômico_do_Estudante.py",
         "tag": "Perfil estudantil",
     },
     {
         "title": "Performance de Cursos e eSocial",
         "description": "Acompanhe indicadores de curso e informações relacionadas ao cenário social.",
-        "icon": "⭐",
+        "icon": "",
         "path": "pages/4_Performance de Cursos e_Social.py",
         "tag": "Desempenho",
     },
@@ -272,14 +267,3 @@ for index, page in enumerate(pages):
             page_link(page["path"], label=f"Abrir {page['title']}", icon="➡️")
         else:
             st.markdown(f"[Abrir {page['title']}]({page['path']})")
-
-# st.markdown('<div class="section-title">Como navegar</div>', unsafe_allow_html=True)
-# st.markdown(
-#     """
-#     <div class="hint">
-#         Use o menu lateral para alternar entre as páginas analíticas. Esta home funciona como ponto de entrada
-#         e atalho para os temas principais do dashboard.
-#     </div>
-#     """,
-#     unsafe_allow_html=True,
-# )
