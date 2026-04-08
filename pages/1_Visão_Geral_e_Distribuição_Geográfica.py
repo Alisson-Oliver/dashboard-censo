@@ -44,9 +44,3 @@ with st.spinner("Carregando análise comparativa..."):
     df_modalidade = VisaoGeralService.get_matriculas_por_modalidade(ano_selecionado)
     components.render_matriz_categoria_modalidade(df_categoria, df_modalidade)
 
-# ===== TABELA RESUMIDA =====
-st.header("Resumo por Região")
-with st.spinner("Carregando resumo..."):
-    df_resumo = VisaoGeralService.get_matriculas_por_regiao(ano_selecionado)
-    df_resumo = df_resumo.dropna()
-    st.dataframe(df_resumo, use_container_width=True)
