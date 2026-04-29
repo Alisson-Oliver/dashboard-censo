@@ -183,8 +183,8 @@ st.markdown(
     <div class="hero">
         <h1>Censo Curso Superior 2024</h1>
         <p>
-            Painel para explorar distribuição geográfica, fluxo acadêmico, perfil socioeconômico
-            e desempenho dos cursos em uma navegação rápida e organizada.
+            Painel para explorar distribuição geográfica, fluxo acadêmico, perfil socioeconômico,
+            desempenho dos cursos e a integração entre microdados do INEP e indicadores étnicos por UF.
         </p>
     </div>
     """,
@@ -218,6 +218,13 @@ for i, (label, value, sub) in enumerate(metric_cards):
 st.markdown('<div class="section-title">Acesso rápido</div>', unsafe_allow_html=True)
 
 pages = [
+    {
+        "title": "INEP + Etnia e Demografia",
+        "description": "Cruza matrículas, ingressantes e concluintes com indicadores étnicos e sociais por UF.",
+        "icon": "",
+        "path": "pages/5_Analise_INEP_e_Etnia.py",
+        "tag": "Análise integrada",
+    },
     {
         "title": "Visão Geral e Distribuição Geográfica",
         "description": "Veja o panorama do país e a distribuição das instituições por região.",

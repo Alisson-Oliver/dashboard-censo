@@ -88,8 +88,11 @@ dashboard-censo/
 ├── README.md
 ├── requirements.txt
 ├── data/
-│   └── data.csv
+│   ├── data.csv
+│   ├── dim_etnia.csv
+│   └── brazil_states.geojson
 ├── pages/
+│   ├── 5_Analise_INEP_e_Etnia.py
 │   ├── 1_Visão_Geral_e_Distribuição_Geográfica.py
 │   ├── 2_Fluxo_Acadêmico_e_Evolução.py
 │   ├── 3_Perfil_Socioeconômico_do_Estudante.py
@@ -98,6 +101,7 @@ dashboard-censo/
     ├── __init__.py
     ├── database.py
     └── pages/
+      ├── integrada_inep_etnia/
         ├── visao_geral/
         ├── fluxo_academico/
         ├── perfil_socioeconomico/
@@ -115,12 +119,18 @@ Fluxo de inicialização:
 1. Abre uma conexão DuckDB em memória (`duckdb.connect()`).
 2. Resolve o caminho absoluto para `data/data.csv`.
 3. Aplica `PRAGMA enable_object_cache` para melhorar reaproveitamento interno.
-4. Carrega o CSV uma única vez em tabela temporária:
+4. Carrega o CSV principal e a dimensão étnica uma única vez em tabelas temporárias:
 
 ```sql
 CREATE OR REPLACE TEMP TABLE censo_data AS
 SELECT *
 FROM read_csv('.../data.csv', delim=';', encoding='latin-1')
+```
+
+```sql
+CREATE OR REPLACE TEMP TABLE dim_etnia AS
+SELECT *
+FROM read_csv('.../dim_etnia.csv', delim=',', header=true)
 ```
 
 Com isso, o arquivo não precisa ser relido para cada gráfico durante a mesma sessão.
@@ -135,6 +145,8 @@ As consultas são disparadas pelos módulos `business.py` de cada domínio em `s
 - `src/pages/performance_cursos/business.py`
 
 Cada método do serviço executa agregações SQL (ex.: `SUM`, `COUNT`, `GROUP BY`, `CASE`) e retorna `DataFrame` pandas.
+
+A análise integrada entre INEP e demografia fica em `src/pages/integrada_inep_etnia/` e faz o `JOIN` entre o censo e `dim_etnia` por UF/região, sempre agregando antes da renderização.
 
 Detalhe importante de performance:
 
@@ -164,7 +176,7 @@ O fluxo de exibição segue este padrão:
 
 Resumo do pipeline:
 
-`data/data.csv -> DuckDB (censo_data) -> business.py -> DataFrame -> components.py -> Streamlit`
+`data/data.csv + data/dim_etnia.csv -> DuckDB (censo_data + dim_etnia) -> business.py -> DataFrame -> components.py -> Streamlit`
 
 ## Dados - INEP
 
