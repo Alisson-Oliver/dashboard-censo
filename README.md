@@ -1,6 +1,6 @@
 # Censo Curso Superior 2024 | Dashboard
 
-Dashboard interativo desenvolvido com Streamlit para visualização e análise de dados do Censo de Educação Superior 2024 do INEP.
+Dashboard interativo desenvolvido com Streamlit para visualização e análise de dados do Censo da Educação Superior (INEP).
 
 ## Requisitos do Sistema
 
@@ -43,7 +43,7 @@ pip install -r requirements.txt
 streamlit run Início.py
 ```
 
-A aplicação será aberta automaticamente em `http://localhost:8501`
+A aplicação será aberta automaticamente em `http://localhost:8501`.
 
 ### Linux / macOS
 
@@ -75,100 +75,141 @@ pip install -r requirements.txt
 #### 5. Execute o dashboard
 
 ```bash
-streamlit run app.py
+streamlit run Início.py
 ```
 
-A aplicação será aberta automaticamente em `http://localhost:8501`
+A aplicação será aberta automaticamente em `http://localhost:8501`.
 
 ## Estrutura do Projeto
 
-```
+```text
 dashboard-censo/
-├── app.py                      # Página principal do dashboard
-├── requirements.txt            # Dependências do projeto
-├── README.md                   # Este arquivo
+├── Início.py
+├── README.md
+├── requirements.txt
 ├── data/
-│   └── data.csv               # Dados do Censo em formato CSV
+│   ├── data.csv
+│   ├── dim_etnia.csv
+│   └── brazil_states.geojson
 ├── pages/
-│   ├── 01_Pagina1.py          # Primeira página (Streamlit multi-page)
-│   └── 02_Pagina2.py          # Segunda página (Streamlit multi-page)
-├── src/
-│   ├── business.py            # Lógica de negócio e processamento de dados
-│   ├── components.py          # Componentes Streamlit reutilizáveis
-│   └── database.py            # Funções de acesso e conexão com dados
-├── .streamlit/                # Configurações do Streamlit
-└── .venv/                     # Ambiente virtual Python (criado automaticamente)
+│   ├── 5_Analise_INEP_e_Etnia.py
+│   ├── 1_Visão_Geral_e_Distribuição_Geográfica.py
+│   ├── 2_Fluxo_Acadêmico_e_Evolução.py
+│   ├── 3_Perfil_Socioeconômico_do_Estudante.py
+│   └── 4_Performance de Cursos e_Social.py
+└── src/
+    ├── __init__.py
+    ├── database.py
+    └── pages/
+      ├── integrada_inep_etnia/
+        ├── visao_geral/
+        ├── fluxo_academico/
+        ├── perfil_socioeconomico/
+        └── performance_cursos/
 ```
 
-### Descrição dos Arquivos
+## Arquitetura Técnica de Dados
 
-| Arquivo/Pasta         | Descrição                                                         |
-| --------------------- | ----------------------------------------------------------------- |
-| **app.py**            | Página principal da aplicação Streamlit com configurações globais |
-| **pages/**            | Diretório com páginas adicionais (multi-page app)                 |
-| **src/business.py**   | Funções de lógica de negócio e processamento                      |
-| **src/components.py** | Componentes e widgets reutilizáveis da interface                  |
-| **src/database.py**   | Funções para leitura e manipulação de dados                       |
-| **data/data.csv**     | Arquivo de dados do Censo em CSV                                  |
-| **requirements.txt**  | Lista de dependências Python                                      |
+### 1) Carregamento da base (ingestão)
 
-## Dependências
+O carregamento é centralizado em `src/database.py` por meio da classe `DatabaseConnection`.
 
-- **Streamlit** ^1.0 - Framework para criar aplicações web em Python
-- **DuckDB** - Banco de dados SQL rápido e eficiente
-- **Plotly** - Biblioteca para visualizações interativas
-- **Pandas** - Manipulação e análise de dados
+Fluxo de inicialização:
+
+1. Abre uma conexão DuckDB em memória (`duckdb.connect()`).
+2. Resolve o caminho absoluto para `data/data.csv`.
+3. Aplica `PRAGMA enable_object_cache` para melhorar reaproveitamento interno.
+4. Carrega o CSV principal e a dimensão étnica uma única vez em tabelas temporárias:
+
+```sql
+CREATE OR REPLACE TEMP TABLE censo_data AS
+SELECT *
+FROM read_csv('.../data.csv', delim=';', encoding='latin-1')
+```
+
+```sql
+CREATE OR REPLACE TEMP TABLE dim_etnia AS
+SELECT *
+FROM read_csv('.../dim_etnia.csv', delim=',', header=true)
+```
+
+Com isso, o arquivo não precisa ser relido para cada gráfico durante a mesma sessão.
+
+### 2) Obtenção dos dados (queries)
+
+As consultas são disparadas pelos módulos `business.py` de cada domínio em `src/pages/`:
+
+- `src/pages/visao_geral/business.py`
+- `src/pages/fluxo_academico/business.py`
+- `src/pages/perfil_socioeconomico/business.py`
+- `src/pages/performance_cursos/business.py`
+
+Cada método do serviço executa agregações SQL (ex.: `SUM`, `COUNT`, `GROUP BY`, `CASE`) e retorna `DataFrame` pandas.
+
+A análise integrada entre INEP e demografia fica em `src/pages/integrada_inep_etnia/` e faz o `JOIN` entre o censo e `dim_etnia` por UF/região, sempre agregando antes da renderização.
+
+Detalhe importante de performance:
+
+- Mesmo que a consulta do serviço use `FROM read_csv(...)`, a camada de banco reescreve automaticamente para `FROM censo_data` antes de executar.
+- Essa reescrita é feita no método `_optimize_query`, reduzindo custo de I/O.
+
+### 3) Organização da lógica
+
+Separação por responsabilidade:
+
+- `pages/*.py`: montagem da tela, seções, colunas e fluxo de interação.
+- `src/pages/<dominio>/business.py`: regras de negócio e consultas.
+- `src/pages/<dominio>/components.py`: criação dos gráficos Plotly.
+- `src/database.py`: conexão, otimização e execução SQL.
+
+Esse desenho facilita manutenção, testes e evolução de cada parte do dashboard.
+
+### 4) Exibição dos dados (renderização)
+
+O fluxo de exibição segue este padrão:
+
+1. A página Streamlit chama métodos de `business.py`.
+2. Recebe `DataFrame` com dados já agregados.
+3. Passa os dados para `components.py`.
+4. O componente monta o gráfico Plotly (`px.bar`, `px.pie`, `px.treemap`, etc.).
+5. A página renderiza com `st.plotly_chart(..., use_container_width=True)`.
+
+Resumo do pipeline:
+
+`data/data.csv + data/dim_etnia.csv -> DuckDB (censo_data + dim_etnia) -> business.py -> DataFrame -> components.py -> Streamlit`
 
 ## Dados - INEP
 
-Os dados utilizados neste projeto são provenientes do **Censo da Educação Superior 2024** do INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira).
+Os dados utilizados neste projeto são provenientes do **Censo da Educação Superior** do INEP (Instituto Nacional de Estudos e Pesquisas Educacionais Anísio Teixeira).
 
 ### Como Obter os Dados
 
 1. Acesse o portal de dados abertos do INEP:
-   - https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior
-
-2. Na página, procure por **"2024"** na seção de Microdados
-
-3. Baixe o arquivo **CSV** do Censo de 2024
-
-4. Renomeie o arquivo para `data.csv` (se necessário)
-
-5. Coloque o arquivo no diretório `data/` do projeto:
-
-   ```
-   dashboard-censo/
-   ├── data/
-   │   └── data.csv  ← Arquivo baixado aqui
-   ```
-
-6. Agora você pode executar o dashboard normalmente:
-   ```bash
-   streamlit run app.py
-   ```
+   https://www.gov.br/inep/pt-br/acesso-a-informacao/dados-abertos/microdados/censo-da-educacao-superior
+2. Baixe o arquivo CSV do ano desejado (ex.: 2024).
+3. Renomeie para `data.csv` (se necessário).
+4. Coloque o arquivo em `data/data.csv`.
 
 ## Como Usar
 
-1. Após obter os dados e colocá-los em `data/data.csv`, execute: `streamlit run app.py`
-2. A página principal será aberta em `app.py`
-3. Use o menu lateral para navegar entre as diferentes páginas
-4. Os dados são carregados automaticamente do arquivo `data/data.csv`
-5. Interaja com os gráficos e filtros conforme necessário
+1. Com o ambiente virtual ativo, execute:
+   `streamlit run Início.py`
+2. A página inicial será aberta em `Início.py`.
+3. Navegue pelas páginas no menu lateral.
+4. Interaja com filtros e gráficos para análise.
 
-## Desenvolvimento
+## Dependências
 
-Para adicionar novas páginas:
-
-1. Crie um novo arquivo em `pages/` com o padrão `NN_NomePagina.py`
-2. Importe e use componentes de `src/components.py`
-3. Use funções de `src/business.py` para lógica de negócio
+- **Streamlit**: interface web
+- **DuckDB**: consultas SQL em alta performance
+- **Plotly**: gráficos interativos
+- **Pandas**: manipulação de dados
 
 ## Troubleshooting
 
 **Erro ao ativar o ambiente virtual (Windows)?**
 
 ```bash
-# Se receber erro de permissão, execute como administrador ou use:
 python -m venv .venv
 .venv\Scripts\activate.bat
 ```
@@ -176,7 +217,6 @@ python -m venv .venv
 **Erro ao instalar pacotes?**
 
 ```bash
-# Atualize o pip primeiro:
 pip install --upgrade pip
 pip install -r requirements.txt
 ```
@@ -184,11 +224,11 @@ pip install -r requirements.txt
 **Porta 8501 já está em uso?**
 
 ```bash
-streamlit run app.py --server.port 8502
+streamlit run Início.py --server.port 8502
 ```
 
 ## Notas
 
-- O ambiente virtual deve ser ativado antes de executar o projeto
-- Certifique-se de que todos os arquivos de dados estão no diretório `data/`
-- A configuração do Streamlit está em `.streamlit/config.toml`
+- Ative o ambiente virtual antes de executar o projeto.
+- Garanta que `data/data.csv` existe.
+- Configurações do Streamlit ficam em `.streamlit/config.toml`.
