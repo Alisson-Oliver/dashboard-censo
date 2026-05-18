@@ -253,9 +253,11 @@ def get_etnia_dinamica(uf_df: pd.DataFrame) -> pd.DataFrame:
     """
     rows = []
     for _, row in uf_df.iterrows():
-        pop_total = float(row.get("POP_TOTAL") or 0)
+        raw_pop = row.get("POP_TOTAL")
+        pop_total = 0.0 if pd.isna(raw_pop) else float(raw_pop)
         for grupo, col in GRUPOS_ETNICOS.items():
-            perc = float(row.get(col) or 0)
+            raw_perc = row.get(col)
+            perc = 0.0 if pd.isna(raw_perc) else float(raw_perc)
             pop_est = pop_total * perc / 100.0
             rows.append(
                 {
