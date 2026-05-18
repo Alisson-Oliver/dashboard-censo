@@ -10,8 +10,16 @@ class DatabaseConnection:
         self.conn = duckdb.connect()
         self.data_path = self._get_data_path()
         self.etnia_path = self._get_etnia_path()
+        self._run_etl_pipeline()
         self._configure_duckdb()
         self._load_data_once()
+
+    def _run_etl_pipeline(self) -> None:
+        try:
+            from pipeline.etl import run_pipeline
+            run_pipeline()
+        except Exception:
+            pass
 
     def _configure_duckdb(self):
         """Aplica configurações de desempenho no DuckDB."""
@@ -19,12 +27,21 @@ class DatabaseConnection:
         self.conn.execute("PRAGMA threads=4")
 
     def _load_data_once(self):
-        """Carrega o CSV em uma tabela temporária para evitar releitura em cada query."""
+        """Carrega os dados em tabelas temporárias DuckDB.
+
+        Prefere Parquet pré-gerado pelo pipeline ETL quando disponível,
+        pois é mais rápido para leitura. Recorre ao CSV original como fallback.
+        """
+        parquet_censo = self._get_processed_path("censo_agregado.parquet")
+        if os.path.exists(parquet_censo):
+            censo_source = f"read_parquet('{parquet_censo}')"
+        else:
+            censo_source = f"read_csv('{self.data_path}', delim=';', encoding='latin-1')"
+
         self.conn.execute(
             f"""
             CREATE OR REPLACE TEMP TABLE censo_data AS
-            SELECT *
-            FROM read_csv('{self.data_path}', delim=';', encoding='latin-1')
+            SELECT * FROM {censo_source}
             """
         )
         self.conn.execute(
@@ -34,6 +51,30 @@ class DatabaseConnection:
             FROM read_csv('{self.etnia_path}', delim=',', header=true)
             """
         )
+
+        self._load_precomputed_tables()
+
+    def _load_precomputed_tables(self) -> None:
+        """Carrega tabelas pré-agregadas pelo pipeline ETL quando disponíveis."""
+        mapping = {
+            "censo_etnia_uf": "censo_etnia_uf.parquet",
+            "censo_etnia_regiao": "censo_etnia_regiao.parquet",
+            "censo_etnia_modalidade": "censo_etnia_modalidade.parquet",
+        }
+        for table_name, filename in mapping.items():
+            path = self._get_processed_path(filename)
+            if os.path.exists(path):
+                self.conn.execute(
+                    f"""
+                    CREATE OR REPLACE TEMP TABLE {table_name} AS
+                    SELECT * FROM read_parquet('{path}')
+                    """
+                )
+
+    def _get_processed_path(self, filename: str) -> str:
+        """Retorna o caminho absoluto de um arquivo em data/processed/."""
+        base_path = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        return os.path.join(base_path, "data", "processed", filename)
 
     def _optimize_query(self, query: str) -> str:
         """Substitui leituras diretas do CSV pela tabela temporária em memória."""
