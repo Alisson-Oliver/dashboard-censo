@@ -151,21 +151,11 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    # ------------------------------------------------------------------
-    # Seção 5 — Análise dinâmica por autodeclaração racial
-    # ------------------------------------------------------------------
+ 
     from src.pages.integrada_inep_etnia.business import GRUPOS_ETNICOS, get_etnia_dinamica
     from src.pages.integrada_inep_etnia.components import render_grafico_dinamico
 
     st.markdown("<div class='section-title'>5. Análise dinâmica por autodeclaração racial</div>", unsafe_allow_html=True)
-    st.markdown(
-        "<div class='insight-box'>"
-        "Explore a distribuição populacional estimada por grupo étnico (autodeclaração) filtrando por região, estado e grupo. "
-        "Os valores absolutos são estimados pelo percentual demográfico aplicado à população total de cada UF. "
-        "As barras mostram o valor absoluto e o percentual de participação na população."
-        "</div>",
-        unsafe_allow_html=True,
-    )
 
     uf_df = transformed["uf"].copy()
     etnia_long = get_etnia_dinamica(uf_df)
@@ -205,7 +195,6 @@ def main() -> None:
             key="dinamico_grupo",
         )
 
-    # Aplica filtros ao DataFrame longo
     df_filtrado = etnia_long.copy()
 
     if regiao_sel != "Todas":
@@ -217,18 +206,15 @@ def main() -> None:
     if grupo_sel != "Todas":
         df_filtrado = df_filtrado[df_filtrado["GRUPO_ETNICO"] == grupo_sel]
 
-    # Define eixo X e agrupamento conforme nível de detalhe selecionado
     if estado_sel != "Todos":
         x_col = "UF_NOME"
         barmode = "group"
         nivel = estado_sel
     elif regiao_sel != "Todas":
-        # Agrega por UF dentro da região
         x_col = "UF_NOME"
         barmode = "group"
         nivel = regiao_sel
     else:
-        # Sem filtro geográfico: agrega por região
         df_filtrado = (
             df_filtrado.groupby(["REGIAO", "GRUPO_ETNICO"], as_index=False)
             .agg(POPULACAO_EST=("POPULACAO_EST", "sum"), PERC_NO_TOTAL=("PERC_NO_TOTAL", "mean"))
