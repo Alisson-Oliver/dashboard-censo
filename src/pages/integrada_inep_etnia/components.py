@@ -165,6 +165,106 @@ def render_heatmap_acesso(df: pd.DataFrame) -> go.Figure:
     return fig
 
 
+_ETNIA_COLORS = {
+    "Branca": "#60a5fa",
+    "Preta": "#1e293b",
+    "Parda": "#d97706",
+    "Indígena": "#16a34a",
+    "Amarela": "#eab308",
+}
+
+
+def render_grafico_dinamico(
+    df_long: pd.DataFrame,
+    x_col: str,
+    titulo: str,
+    barmode: str = "group",
+) -> go.Figure:
+    """Gráfico de colunas com valor absoluto e rótulo de percentual.
+
+    Parâmetros
+    ----------
+    df_long:
+        DataFrame no formato longo com colunas:
+        x_col, GRUPO_ETNICO, POPULACAO_EST, PERC_NO_TOTAL
+    x_col:
+        Coluna usada no eixo X ("UF_NOME" ou "REGIAO").
+    titulo:
+        Título exibido no gráfico.
+    barmode:
+        "group" (barras lado a lado) ou "stack" (barras empilhadas).
+    """
+    if df_long.empty:
+        fig = go.Figure()
+        fig.update_layout(
+            title=titulo,
+            template="plotly_white",
+            annotations=[
+                dict(
+                    text="Nenhum dado para os filtros selecionados.",
+                    x=0.5,
+                    y=0.5,
+                    xref="paper",
+                    yref="paper",
+                    showarrow=False,
+                    font=dict(size=16, color="#94a3b8"),
+                )
+            ],
+        )
+        return fig
+
+    grupos = df_long["GRUPO_ETNICO"].unique().tolist()
+    x_values = df_long[x_col].unique().tolist()
+
+    fig = go.Figure()
+
+    for grupo in grupos:
+        subset = df_long[df_long["GRUPO_ETNICO"] == grupo].copy()
+        subset = subset.set_index(x_col).reindex(x_values).reset_index()
+
+        pop_est = subset["POPULACAO_EST"].fillna(0).round(0)
+        perc = subset["PERC_NO_TOTAL"].fillna(0)
+
+        text_labels = [
+            f"{int(v):,}".replace(",", ".") + f"<br>{p:.1f}%"
+            for v, p in zip(pop_est, perc)
+        ]
+
+        fig.add_trace(
+            go.Bar(
+                name=grupo,
+                x=subset[x_col],
+                y=pop_est,
+                text=text_labels,
+                textposition="outside",
+                textfont=dict(size=10),
+                marker_color=_ETNIA_COLORS.get(grupo, "#94a3b8"),
+                hovertemplate=(
+                    f"<b>{grupo}</b><br>"
+                    + "%{x}<br>"
+                    + "Estimativa absoluta: %{y:,.0f}<br>"
+                    + "% na população: %{customdata:.1f}%"
+                    + "<extra></extra>"
+                ),
+                customdata=perc,
+            )
+        )
+
+    fig.update_layout(
+        title=titulo,
+        template="plotly_white",
+        barmode=barmode,
+        height=560,
+        margin=dict(t=90, l=20, r=20, b=60),
+        font=dict(family="Arial, sans-serif", size=12),
+        xaxis=dict(title=x_col.replace("UF_NOME", "Estado").replace("REGIAO", "Região"), tickangle=-20),
+        yaxis=dict(title="Estimativa de pessoas (pop. × %)"),
+        legend=dict(title="Autodeclaração", orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        uniformtext=dict(mode="hide", minsize=8),
+    )
+    return fig
+
+
 def render_choropleth_matriculas(df: pd.DataFrame) -> go.Figure:
     geojson = json.loads(GEOJSON_PATH.read_text(encoding="utf-8"))
 

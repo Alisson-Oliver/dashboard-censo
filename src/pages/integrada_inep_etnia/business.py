@@ -234,6 +234,42 @@ def create_kpis(data: dict[str, pd.DataFrame]) -> dict[str, object]:
     }
 
 
+GRUPOS_ETNICOS = {
+    "Branca": "PERC_BRANCA",
+    "Preta": "PERC_PRETA",
+    "Parda": "PERC_PARDA",
+    "Indígena": "PERC_INDIGENA",
+    "Amarela": "PERC_AMARELA",
+}
+
+
+def get_etnia_dinamica(uf_df: pd.DataFrame) -> pd.DataFrame:
+    """Expande as colunas PERC_* em linhas para uso no gráfico dinâmico.
+
+    Retorna DataFrame com colunas:
+        UF, UF_NOME, REGIAO, GRUPO_ETNICO, POPULACAO_EST, PERC_NO_TOTAL
+    onde POPULACAO_EST é a estimativa absoluta de pessoas por grupo étnico
+    e PERC_NO_TOTAL é o percentual daquele grupo na população total da UF.
+    """
+    rows = []
+    for _, row in uf_df.iterrows():
+        pop_total = float(row.get("POP_TOTAL") or 0)
+        for grupo, col in GRUPOS_ETNICOS.items():
+            perc = float(row.get(col) or 0)
+            pop_est = pop_total * perc / 100.0
+            rows.append(
+                {
+                    "UF": row["UF"],
+                    "UF_NOME": row["UF_NOME"],
+                    "REGIAO": row["REGIAO"],
+                    "GRUPO_ETNICO": grupo,
+                    "POPULACAO_EST": pop_est,
+                    "PERC_NO_TOTAL": perc,
+                }
+            )
+    return pd.DataFrame(rows)
+
+
 def create_charts(data: dict[str, pd.DataFrame]) -> dict[str, object]:
     """Constrói os objetos Plotly a partir das tabelas transformadas."""
     from src.pages.integrada_inep_etnia import components
