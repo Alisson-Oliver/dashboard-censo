@@ -151,6 +151,95 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
+ 
+    from src.pages.integrada_inep_etnia.business import GRUPOS_ETNICOS, get_etnia_dinamica
+    from src.pages.integrada_inep_etnia.components import render_grafico_dinamico
+
+    st.markdown("<div class='section-title'>5. Análise dinâmica por autodeclaração racial</div>", unsafe_allow_html=True)
+
+    uf_df = transformed["uf"].copy()
+    etnia_long = get_etnia_dinamica(uf_df)
+
+    regioes_disponiveis = sorted(uf_df["REGIAO"].dropna().unique().tolist())
+    grupos_disponiveis = list(GRUPOS_ETNICOS.keys())
+
+    filter_col1, filter_col2, filter_col3 = st.columns(3)
+
+    with filter_col1:
+        regiao_sel = st.selectbox(
+            "Região",
+            options=["Todas"] + regioes_disponiveis,
+            index=0,
+            key="dinamico_regiao",
+        )
+
+    with filter_col2:
+        if regiao_sel == "Todas":
+            estados_opts = sorted(uf_df["UF_NOME"].dropna().unique().tolist())
+        else:
+            estados_opts = sorted(
+                uf_df.loc[uf_df["REGIAO"] == regiao_sel, "UF_NOME"].dropna().unique().tolist()
+            )
+        estado_sel = st.selectbox(
+            "Estado (UF)",
+            options=["Todos"] + estados_opts,
+            index=0,
+            key="dinamico_estado",
+        )
+
+    with filter_col3:
+        grupo_sel = st.selectbox(
+            "Autodeclaração racial",
+            options=["Todas"] + grupos_disponiveis,
+            index=0,
+            key="dinamico_grupo",
+        )
+
+    df_filtrado = etnia_long.copy()
+
+    if regiao_sel != "Todas":
+        df_filtrado = df_filtrado[df_filtrado["REGIAO"] == regiao_sel]
+
+    if estado_sel != "Todos":
+        df_filtrado = df_filtrado[df_filtrado["UF_NOME"] == estado_sel]
+
+    if grupo_sel != "Todas":
+        df_filtrado = df_filtrado[df_filtrado["GRUPO_ETNICO"] == grupo_sel]
+
+    if estado_sel != "Todos":
+        x_col = "UF_NOME"
+        barmode = "group"
+        nivel = estado_sel
+    elif regiao_sel != "Todas":
+        x_col = "UF_NOME"
+        barmode = "group"
+        nivel = regiao_sel
+    else:
+        df_filtrado = (
+            df_filtrado.groupby(["REGIAO", "GRUPO_ETNICO"], as_index=False)
+            .agg(POPULACAO_EST=("POPULACAO_EST", "sum"), PERC_NO_TOTAL=("PERC_NO_TOTAL", "mean"))
+        )
+        df_filtrado["UF_NOME"] = df_filtrado["REGIAO"]
+        x_col = "REGIAO"
+        barmode = "group"
+        nivel = "Brasil"
+
+    barmode = "stack" if grupo_sel == "Todas" and estado_sel == "Todos" and regiao_sel == "Todas" else "group"
+
+    partes_titulo = []
+    if regiao_sel != "Todas":
+        partes_titulo.append(f"Região: {regiao_sel}")
+    if estado_sel != "Todos":
+        partes_titulo.append(f"Estado: {estado_sel}")
+    if grupo_sel != "Todas":
+        partes_titulo.append(f"Grupo: {grupo_sel}")
+    titulo_grafico = "Distribuição por autodeclaração racial"
+    if partes_titulo:
+        titulo_grafico += " — " + " | ".join(partes_titulo)
+
+    fig_dinamico = render_grafico_dinamico(df_filtrado, x_col=x_col, titulo=titulo_grafico, barmode=barmode)
+    st.plotly_chart(fig_dinamico, use_container_width=True)
+
 
 if __name__ == "__main__":
     main()
