@@ -7,7 +7,7 @@ st.markdown(
     """
     <style>
         .st-emotion-cache-1w723zb {
-            max-width: 1200px !important;
+            max-width: 1300px !important;
         }
     </style>
     """,
@@ -18,7 +18,7 @@ st.title("Fluxo Acadêmico e Evolução")
 
 col1, col2 = st.columns(2)
 
-with col2:
+with col1:
     st.subheader("Fluxo por Região (2024)")
     with st.spinner("Carregando fluxo por região..."):
         df_regiao = FluxoAcademicoService.get_fluxo_por_regiao_2024()

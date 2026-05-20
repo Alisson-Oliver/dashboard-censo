@@ -6,6 +6,16 @@ st.set_page_config(page_title="Visão Geral e Distribuição Geográfica")
 
 st.title("Visão Geral e Distribuição Geográfica")
 st.markdown("Onde estão os alunos e as instituições?")
+st.markdown(
+    """
+    <style>
+        .st-emotion-cache-1w723zb {
+            max-width: 1200px !important;
+        }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 anos_disponiveis = VisaoGeralService.get_anos_disponiveis()
 ano_selecionado = anos_disponiveis[0]

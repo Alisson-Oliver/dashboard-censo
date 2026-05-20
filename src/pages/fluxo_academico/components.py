@@ -9,13 +9,14 @@ def render_funil_fluxo(df_funil: pd.Series):
     fig = go.Figure(
         data=[
             go.Funnel(
-                y=["Ingressantes", "Matriculados", "Concluintes"],
+                y=["Calouros", "Veteranos", "Concluintes"],
                 x=[
                     df_funil["ingressantes"],
                     df_funil["matriculados"],
                     df_funil["concluintes"],
                 ],
                 textinfo="value+percent initial",
+                marker=dict(color=["#2563eb", "#0ea5e9", "#ef4444"]),
             )
         ]
     )
@@ -25,36 +26,32 @@ def render_funil_fluxo(df_funil: pd.Series):
 def render_fluxo_por_regiao(df_regiao: pd.DataFrame):
     """Renderiza o gráfico de fluxo por região"""
     fig = go.Figure()
-    
+
     fig.add_trace(
         go.Bar(
             x=df_regiao["NO_REGIAO"],
             y=df_regiao["ingressantes"],
-            name="Ingressantes",
+            name="Calouros",
         )
     )
     fig.add_trace(
         go.Bar(
             x=df_regiao["NO_REGIAO"],
             y=df_regiao["matriculados"],
-            name="Matriculados",
+            name="Veteranos",
         )
     )
     fig.add_trace(
-        go.Bar(
-            x=df_regiao["NO_REGIAO"],
-            y=df_regiao["concluintes"],
-            name="Concluintes"
-        )
+        go.Bar(x=df_regiao["NO_REGIAO"], y=df_regiao["concluintes"], name="Concluintes")
     )
-    
+
     fig.update_layout(
         barmode="group",
         title="Fluxo Acadêmico por Região (2024)",
         xaxis_title="Região",
         yaxis_title="Quantidade",
     )
-    
+
     return fig
 
 
@@ -68,13 +65,13 @@ def render_distribuicao_taxa_conclusao(df: pd.DataFrame):
         labels={"taxa_conclusao": "Taxa de Conclusão (%)", "count": "Número de Cursos"},
         color_discrete_sequence=["lightblue"],
     )
-    
+
     fig.update_layout(
         xaxis_title="Taxa de Conclusão (%)",
         yaxis_title="Número de Cursos",
         bargap=0.1,
     )
-    
+
     return fig
 
 
@@ -94,7 +91,7 @@ def render_taxa_vs_matriculados(df: pd.DataFrame):
         },
         size_max=80,
     )
-    
+
     fig.update_traces(
         marker=dict(opacity=0.8, line=dict(width=1, color="DarkSlateGrey"))
     )
@@ -104,7 +101,7 @@ def render_taxa_vs_matriculados(df: pd.DataFrame):
         yaxis_title="Taxa de Conclusão (%)",
         legend_title="Taxa de Conclusão",
     )
-    
+
     return fig
 
 
@@ -122,14 +119,14 @@ def render_estatisticas_bloco(stats: dict):
 def render_top_cursos(df_menor: pd.DataFrame, df_maior: pd.DataFrame):
     """Renderiza tabelas de top cursos"""
     col1, col2 = st.columns(2)
-    
+
     with col1:
         st.subheader("Top 10 Cursos com Menor Taxa de Conclusão")
         st.dataframe(
             df_menor[["NO_CURSO", "total_matriculados", "taxa_conclusao"]],
             use_container_width=True,
         )
-    
+
     with col2:
         st.subheader("Top 10 Cursos com Maior Taxa de Conclusão")
         st.dataframe(
