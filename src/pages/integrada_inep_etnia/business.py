@@ -279,6 +279,5 @@ def create_charts(data: dict[str, pd.DataFrame]) -> dict[str, object]:
     return {
         "scatter": components.render_scatter_preta_vs_matriculas(data["uf"]),
         "modalidade": components.render_modalidade_regional(data["modalidade"]),
-        "heatmap": components.render_heatmap_acesso(data["regiao"]),
         "mapa": components.render_choropleth_matriculas(data["uf"]),
     }

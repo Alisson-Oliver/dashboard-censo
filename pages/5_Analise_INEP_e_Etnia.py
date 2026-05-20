@@ -124,16 +124,7 @@ def main() -> None:
         unsafe_allow_html=True,
     )
 
-    st.markdown("<div class='section-title'>2. Heatmap de acesso ao ensino superior</div>", unsafe_allow_html=True)
-    st.plotly_chart(charts["heatmap"], use_container_width=True)
-    st.markdown(
-        "<div class='insight-box'>"
-        "Os intensities são ponderados pela participação demográfica de cada grupo, o que ajuda a localizar regiões em que ingresso e conclusão tendem a concentrar-se em perfis raciais distintos."
-        "</div>",
-        unsafe_allow_html=True,
-    )
-
-    st.markdown("<div class='section-title'>3. Mapa choropleth do Brasil</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>2. Mapa choropleth do Brasil</div>", unsafe_allow_html=True)
     st.plotly_chart(charts["mapa"], use_container_width=True)
     st.markdown(
         "<div class='insight-box'>"
@@ -146,7 +137,7 @@ def main() -> None:
     from src.pages.integrada_inep_etnia.business import GRUPOS_ETNICOS, get_etnia_dinamica
     from src.pages.integrada_inep_etnia.components import render_grafico_dinamico
 
-    st.markdown("<div class='section-title'>4. Análise dinâmica por autodeclaração racial</div>", unsafe_allow_html=True)
+    st.markdown("<div class='section-title'>3. Análise dinâmica por autodeclaração racial</div>", unsafe_allow_html=True)
 
     uf_df = transformed["uf"].copy()
     etnia_long = get_etnia_dinamica(uf_df)
